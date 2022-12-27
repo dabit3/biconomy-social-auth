@@ -1,0 +1,122 @@
+import { useState, useEffect, useRef } from 'react'
+import SocialLogin from '@biconomy/web3-auth'
+import { ChainId } from '@biconomy/core-types'
+import { ethers } from 'ethers'
+import SmartAccount from '@biconomy/smart-account'
+import { css } from '@emotion/css'
+
+export default function Home() {
+  const [smartAccount, setSmartAccount] = useState<SmartAccount | null>(null)
+  const [interval, enableInterval] = useState(false)
+  const sdkRef = useRef<any>(null)
+  const [loading, setLoading] = useState<boolean>(false)
+
+  useEffect(() => {
+    let configureLogin: any
+    if (interval) {
+      configureLogin = setInterval(() => {
+        if (sdkRef.current.provider) {
+          login()
+          clearInterval(configureLogin)
+        }
+      }, 1000);
+    }
+  }, [interval])
+  
+  async function login() {
+    if (!sdkRef.current) {
+      const socialLoginSDK = new SocialLogin()    
+      await socialLoginSDK.init(ethers.utils.hexValue(ChainId.POLYGON_MAINNET))
+      sdkRef.current = socialLoginSDK
+    }
+    if (sdkRef.current.provider) {
+      setLoading(true)
+      const web3Provider = new ethers.providers.Web3Provider(
+        sdkRef.current.provider
+      )
+      sdkRef.current.hideWallet()
+      setupSmartAccount(web3Provider)
+    } else {
+      sdkRef.current.showConnectModal()
+      sdkRef.current.showWallet()
+      enableInterval(true)
+    }
+  }
+
+  const logout = async () => {
+    if (!sdkRef.current) {
+      console.error('Web3Modal not initialized.')
+      return
+    }
+    await sdkRef.current.logout()
+    sdkRef.current.hideWallet()
+    setSmartAccount(null)
+    enableInterval(false)
+  }
+
+  async function setupSmartAccount(web3Provider: any) {
+    try {
+      const smartAccount = new SmartAccount(web3Provider, {
+        activeNetworkId: ChainId.POLYGON_MAINNET,
+        supportedNetworksIds: [ChainId.POLYGON_MAINNET],
+      });
+      await smartAccount.init()
+      setSmartAccount(smartAccount)
+      setLoading(false)
+    } catch (err) {
+      console.log('error setting up smart account... ', err)
+    }
+  }
+
+  return (
+    <div className={containerStyle}>
+      <h1 className={headerStyle}>BICONOMY AUTH</h1>
+      {
+        !smartAccount && !loading && <button className={buttonStyle} onClick={login}>Login</button>
+      }
+      {
+        loading && <p>Loading account details...</p>
+      }
+      {
+        !!smartAccount && (
+          <div className={detailsContainerStyle}>
+            <h3>Smart account address:</h3>
+            <p>{smartAccount.address}</p>
+            <button className={buttonStyle} onClick={logout}>Logout</button>
+          </div>
+        )
+      }
+    </div>
+  )
+}
+
+const detailsContainerStyle = css`
+  margin-top: 10px;
+`
+
+const buttonStyle = css`
+  padding: 14px;
+  width: 300px;
+  border: none;
+  cursor: pointer;
+  border-radius: 999px;
+  outline: none;
+  margin-top: 20px;
+  transition: all .25s;
+  &:hover {
+    background-color: rgba(0, 0, 0, .2); 
+  }
+`
+
+const headerStyle = css`
+  font-size: 44px;
+`
+
+const containerStyle = css`
+  width: 900px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  padding-top: 100px;
+`
