@@ -22,7 +22,7 @@ export default function Home() {
       }, 1000);
     }
   }, [interval])
-  
+
   async function login() {
     if (!sdkRef.current) {
       const socialLoginSDK = new SocialLogin()    
@@ -30,12 +30,7 @@ export default function Home() {
       sdkRef.current = socialLoginSDK
     }
     if (sdkRef.current.provider) {
-      setLoading(true)
-      const web3Provider = new ethers.providers.Web3Provider(
-        sdkRef.current.provider
-      )
-      sdkRef.current.hideWallet()
-      setupSmartAccount(web3Provider)
+      setupSmartAccount()
     } else {
       sdkRef.current.showConnectModal()
       sdkRef.current.showWallet()
@@ -54,7 +49,12 @@ export default function Home() {
     enableInterval(false)
   }
 
-  async function setupSmartAccount(web3Provider: any) {
+  async function setupSmartAccount() {
+    setLoading(true)
+    const web3Provider = new ethers.providers.Web3Provider(
+      sdkRef.current.provider
+    )
+    sdkRef.current.hideWallet()
     try {
       const smartAccount = new SmartAccount(web3Provider, {
         activeNetworkId: ChainId.POLYGON_MAINNET,
