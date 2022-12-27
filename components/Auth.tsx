@@ -15,8 +15,8 @@ export default function Home() {
     let configureLogin: any
     if (interval) {
       configureLogin = setInterval(() => {
-        if (sdkRef.current.provider) {
-          login()
+        if (!!sdkRef.current.provider) {
+          setupSmartAccount()
           clearInterval(configureLogin)
         }
       }, 1000);
@@ -29,24 +29,13 @@ export default function Home() {
       await socialLoginSDK.init(ethers.utils.hexValue(ChainId.POLYGON_MAINNET))
       sdkRef.current = socialLoginSDK
     }
-    if (sdkRef.current.provider) {
-      setupSmartAccount()
-    } else {
+    if (!sdkRef.current.provider) {
       sdkRef.current.showConnectModal()
       sdkRef.current.showWallet()
       enableInterval(true)
+    } else {
+      setupSmartAccount()
     }
-  }
-
-  const logout = async () => {
-    if (!sdkRef.current) {
-      console.error('Web3Modal not initialized.')
-      return
-    }
-    await sdkRef.current.logout()
-    sdkRef.current.hideWallet()
-    setSmartAccount(null)
-    enableInterval(false)
   }
 
   async function setupSmartAccount() {
@@ -66,6 +55,17 @@ export default function Home() {
     } catch (err) {
       console.log('error setting up smart account... ', err)
     }
+  }
+
+  const logout = async () => {
+    if (!sdkRef.current) {
+      console.error('Web3Modal not initialized.')
+      return
+    }
+    await sdkRef.current.logout()
+    sdkRef.current.hideWallet()
+    setSmartAccount(null)
+    enableInterval(false)
   }
 
   return (
