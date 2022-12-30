@@ -7,10 +7,10 @@ const nextConfig = {
         "fs": false,
         "net": false,
         "tls": false
-      };
+      }
     }
-    return config;
-  },
-};
+    return config
+  }
+}
 
-module.exports = nextConfig;
+module.exports = nextConfig

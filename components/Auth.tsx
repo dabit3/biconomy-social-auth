@@ -8,18 +8,18 @@ import { css } from '@emotion/css'
 export default function Home() {
   const [smartAccount, setSmartAccount] = useState<SmartAccount | null>(null)
   const [interval, enableInterval] = useState(false)
-  const sdkRef = useRef<any>(null)
+  const sdkRef = useRef<SocialLogin | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
 
   useEffect(() => {
-    let configureLogin: any
+    let configureLogin
     if (interval) {
       configureLogin = setInterval(() => {
-        if (!!sdkRef.current.provider) {
+        if (!!sdkRef.current?.provider) {
           setupSmartAccount()
           clearInterval(configureLogin)
         }
-      }, 1000);
+      }, 1000)
     }
   }, [interval])
 
@@ -39,16 +39,17 @@ export default function Home() {
   }
 
   async function setupSmartAccount() {
+    if (!sdkRef?.current?.provider) return
+    sdkRef.current.hideWallet()
     setLoading(true)
     const web3Provider = new ethers.providers.Web3Provider(
       sdkRef.current.provider
     )
-    sdkRef.current.hideWallet()
     try {
       const smartAccount = new SmartAccount(web3Provider, {
         activeNetworkId: ChainId.POLYGON_MAINNET,
         supportedNetworksIds: [ChainId.POLYGON_MAINNET],
-      });
+      })
       await smartAccount.init()
       setSmartAccount(smartAccount)
       setLoading(false)
