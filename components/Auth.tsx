@@ -26,14 +26,17 @@ export default function Home() {
   async function login() {
     if (!sdkRef.current) {
       const socialLoginSDK = new SocialLogin()
-      const signature1 = await socialLoginSDK.whitelistUrl('https://biconomy-social-auth.vercel.app');
-      await socialLoginSDK.init(ethers.utils.hexValue(ChainId.POLYGON_MAINNET), {
-        'https://biconomy-social-auth.vercel.app': signature1,
+      const signature1 = await socialLoginSDK.whitelistUrl('https://biconomy-social-auth.vercel.app')
+      await socialLoginSDK.init({
+        chainId: ethers.utils.hexValue(ChainId.POLYGON_MAINNET),
+        whitelistUrls: {
+          'https://biconomy-social-auth.vercel.app': signature1,
+        }
       })
       sdkRef.current = socialLoginSDK
     }
     if (!sdkRef.current.provider) {
-      sdkRef.current.showConnectModal()
+      // sdkRef.current.showConnectModal()
       sdkRef.current.showWallet()
       enableInterval(true)
     } else {
@@ -53,7 +56,6 @@ export default function Home() {
         activeNetworkId: ChainId.POLYGON_MAINNET,
         supportedNetworksIds: [ChainId.POLYGON_MAINNET],
       })
-
       await smartAccount.init()
       setSmartAccount(smartAccount)
       setLoading(false)
